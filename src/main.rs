@@ -20,14 +20,15 @@ fn main() {
     column1InvMixColumn.push(0x0b);
     println!("{}", column1InvMixColumn.len());
     println!("{:?}", column1InvMixColumn);
-    let mut z : Vec<u8> = Vec::with_capacity(4);
-    for ((zval, aval), bval) in z.iter_mut().zip(&row1MixColumn).zip(&column1InvMixColumn) {
-        *zval = *aval + *bval;
-    }
+    let mut z : Vec<u8> = vec![0,0,0,0];
+
+
+    z[0] = g8mult!(row1MixColumn[0] as usize, column1InvMixColumn[0] as usize);
+
     
     println!("{:?}", z);
     let omar = sbox!(0xc2);
     println!("{}", omar);
     let shh = invsbox!(10);
-    println!("{}", shh);
+    println!("{}", shh);   
 }
