@@ -1,22 +1,38 @@
 #![allow(non_snake_case)]
+#![warn(unused_assignments)]
+#![allow(overflowing_literals)]
 
-use AES::{g8mult, sbox, invsbox};
+// use AES::tables::{SBOX, INVSBOX};
+
+
+fn g8mult(a : &mut u8, b: &mut u8) -> u8 {
+    let mut p : u8 = 0;
+    let mut hbs : u8 = 0;
+
+    for _ in 0..8 {
+        if *b & 1 != 0 {
+            p ^= *a;
+        }
+        hbs = *a & 0x80;
+        *a <<= 1;
+        if hbs != 0 {
+            *a ^= 0x1b;
+        }
+        *b >>= 1;
+    }
+
+    p
+}
 
 fn main() {
-    let khaled = g8mult!(57, 13);
-    println!("{}", khaled);
 
-    let mut z : Vec<u8> = vec![0,0,0,0];
+    let mut a : u8 = 0xc2;
+    let mut b : u8 = 0x2f;
+    let c : u8 = g8mult(&mut a, &mut b);
+    println!("{}", c);
+    println!("{}",b);
 
-
-    z[0] = g8mult!(sbox![0], invsbox![0]);
-    z[1] = g8mult!(sbox![1], invsbox![1]);
-    z[2] = g8mult!(sbox![2], invsbox![2]);
-    z[3] = g8mult!(sbox![3], invsbox![3]);
-
-    println!("{:?}", z);
-    let omar = sbox!(0xc2);
-    println!("{}", omar);
-    let shh = invsbox!(10);
-    println!("{}", shh);   
 }
+
+
+
