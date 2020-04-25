@@ -9,16 +9,16 @@ pub fn g8mult(_x : &u8, _y: &u8) -> u8 {
     let mut b = _y.clone();
 
     let mut p : u8 = 0;
-    let mut hbs : u8 = 0;
+    let mut overflow_check : u8 = 0;
 
     for _ in 0..8 {
         if b & 1 != 0 {
             p ^= a;
         }
-        hbs = a & 0x80;
+        overflow_check = a & 0x80;      // if true it would overflow in the next step
         a <<= 1;
-        if hbs != 0 {
-            a ^= 0x1b;
+        if overflow_check != 0 {
+            a ^= 0x1b;                  // subtract from it the Irreducible polynomial
         }
         b >>= 1;
     }
