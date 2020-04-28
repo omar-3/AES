@@ -5,8 +5,10 @@ use AES::tables::{SBOX, INVSBOX, Rcon};
 use AES::settings::{Nb, Nr, Nk};
 
 unsafe fn KeyExpansion(key : &[u8]) -> Vec<u8> {
+
     let mut RoundKey : Vec<u8> = vec![0; ((Nb * (Nr + 1)) * 4) as usize];
     let mut temp : Vec<u8> = vec![0; 4];
+
     for i in 0..Nk 
     {
         RoundKey[((i * 4) + 0) as usize] = key[((i * 4) + 0) as usize];
@@ -46,7 +48,9 @@ unsafe fn KeyExpansion(key : &[u8]) -> Vec<u8> {
             temp[0] = temp[0] ^ Rcon[((i/Nk) - 1) as usize];
         }
 
+        // the word above it
         let k = (i - Nk) * 4;
+
         RoundKey[((i * 4) + 0) as usize] = RoundKey[(k + 0) as usize] ^ temp[0];
         RoundKey[((i * 4) + 1) as usize] = RoundKey[(k + 1) as usize] ^ temp[1];
         RoundKey[((i * 4) + 2) as usize] = RoundKey[(k + 2) as usize] ^ temp[2];
@@ -56,13 +60,24 @@ unsafe fn KeyExpansion(key : &[u8]) -> Vec<u8> {
     RoundKey
 }
 
+unsafe fn AddRoundKey(data : &mut [u8], RoundKey : & [u8], round : u8) {
+    for i in 0..4*Nb {
+        data[i as usize] = data[i as usize] ^ RoundKey[((round * Nb * 4) + i ) as usize];
+    }
+}
+
+
 fn main() {
     unsafe {
-        let mut bytes : Vec<u8> = vec![52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60];
-        println!("{:?}", bytes);
-        println!("{}", KeyExpansion(&mut bytes).len());
-       
-        
+        let mut key : Vec<u8> = vec![52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60];
+        let mut data : Vec<u8> = vec![52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60];
+        let RoundKey = KeyExpansion(&mut key);
+        println!("{:?}", RoundKey);
+        println!("--------------------------------------------------");
+        println!("{:?}", data);
+        println!("--------------------------------------------------");
+        AddRoundKey(&mut data, & RoundKey, 2);
+        println!("{:?}", data)
     }
 }
 
