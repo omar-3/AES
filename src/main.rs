@@ -78,6 +78,74 @@ unsafe fn invsubSbox(data: &mut [u8]) {
     }
 }
 
+unsafe fn shiftRows(data: &mut [u8]) {
+
+    // second row --> 1 shift to left
+    // second row indices is 1-5-9-12
+    {
+        let temp = data[1];
+        data[1]  = data[5];
+        data[5]  = data[9];
+        data[9]  = data[13];
+        data[13] = temp;
+    }
+
+    // third row --> 2 shifts to left
+    // third row indices is 2-6-10-14
+    {
+        let temp1 = data[2];
+        let temp2 = data[6];
+        data[2] = data[10];
+        data[6] = data[14];
+
+        data[10] = temp1;
+        data[14] = temp2;
+    }
+
+    // fourth row --> 3 shifts to left
+    // fourth row indices is 3-7-11-15
+    {
+        let temp = data[15];
+        data[15] = data[11];
+        data[11] = data[7];
+        data[7]  = data[3];
+        data[3]  = temp;
+    }
+}
+
+
+unsafe fn unshiftRows(data: &mut [u8]) {
+
+    // second row --> 1 shifts to right
+    {
+        let temp = data[13];
+        data[13] = data[9];
+        data[9] = data[5];
+        data[5] = data[1];
+        data[1] = temp;
+    }
+
+    // third row --> 2 shifts to right
+    {
+        let temp1 = data[14];
+        let temp2 = data[10];
+        data[14] = data[6];
+        data[10] = data[2];
+
+        data[6] = temp1;
+        data[2] = temp2;
+    }
+
+    // fourth row --> 3 shits to right
+    {
+        let temp = data[3];
+        data[3] = data[7];
+        data[7] = data[11];
+        data[11] = data[15];
+        data[15] = temp;
+    }
+}
+
 
 fn main() {
     unsafe {
@@ -91,20 +159,14 @@ fn main() {
                                       52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60,
                                       52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60,
                                       52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60];
-        let RoundKey = KeyExpansion(&mut key);
-        println!("{:?}", RoundKey);
-        println!("--------------------------------------------------");
-        println!("{:?}", data);
-        println!("--------------------------------------------------");
-        AddRoundKey(&mut data[16..32], & RoundKey, 2);
-        println!("{:?}", data);
-        println!("--------------------------------------------------");
-        subSbox(&mut data[0..16]);
-        println!("{:?}", data);
-        println!("--------------------------------------------------");
-        invsubSbox(&mut data[0..16]);
-        println!("{:?}", data);
-        println!("--------------------------------------------------");
+        println!("{:?}", key);
+        println!("---------------------------------------------");
+        shiftRows(&mut key);
+        println!("{:?}", key);
+        println!("---------------------------------------------");
+        unshiftRows(&mut key);
+        println!("{:?}", key);
+        println!("---------------------------------------------");
 
     }
 }
