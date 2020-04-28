@@ -10,5 +10,5 @@ This ~~is~~ <b>would be</b> ``Rust`` implementation for ```AES``` based on [FIBS
 * Counter Mode (CTR)
 * Galois Counter Mode (GCM)
 
-</br></br>Many of these modes are obsolete but I ~~am~~ <b>would be</b> including them for the sake of completeness. This is not a table-based implementation like what you could find at OpenSSL, so this can't be used in a **very** serious application.
+</br></br>Many of these modes are obsolete but I ~~am~~ <b>would be</b> including them for the sake of completeness. This is not a table-based implementation like what you could find at OpenSSL from [here](https://github.com/openssl/openssl/blob/master/crypto/aes/aes_core.c), so this can't be used in a **very** serious application.
 
