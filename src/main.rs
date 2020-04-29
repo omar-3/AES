@@ -152,8 +152,8 @@ unsafe fn unshiftRows(data: &mut [u8]) {
 unsafe fn mix(data: &mut [u8]) {
     for word in 0..4 
     {
-        let columnOfstate = data[word*4..word*4+4].to_vec().clone();
-        
+        let columnOfstate = data[word*4 .. word*4+4].to_vec().clone();
+        println!("{:?}", columnOfstate);
         data[word * 4 + 0] = g8add(&g8mult(&columnOfstate[0], &MixColumn[0][0]) , &g8add(&g8mult(&columnOfstate[1], &MixColumn[0][1]) 
                            , &g8add(&g8mult(&columnOfstate[2], &MixColumn[0][2]) , &g8mult(&columnOfstate[3], &MixColumn[0][3]))));
                              
@@ -175,7 +175,7 @@ unsafe fn mix(data: &mut [u8]) {
 unsafe fn invmix(data: &mut [u8]) {
     for word in 0..4 
     {
-        let columnOfstate = data[word*4..word*4+4].to_vec().clone();
+        let columnOfstate = data[word*4 .. word*4+4].to_vec().clone();
         
         data[word * 4 + 0] = g8add(&g8mult(&columnOfstate[0], &invMixColumn[0][0]) , &g8add(&g8mult(&columnOfstate[1], &invMixColumn[0][1]) 
                            , &g8add(&g8mult(&columnOfstate[2], &invMixColumn[0][2]) , &g8mult(&columnOfstate[3], &invMixColumn[0][3]))));
