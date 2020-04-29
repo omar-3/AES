@@ -1,7 +1,10 @@
 #![allow(non_snake_case)]
+#![warn(unused_mut)]
+#![warn(unused_variables)]
+
 
 use AES::gf8_operations::{g8mult, g8add, g8sub};
-use AES::tables::{SBOX, INVSBOX, Rcon};
+use AES::tables::{SBOX, INVSBOX, Rcon, MixColumn, invMixColumn};
 use AES::settings::{Nb, Nr, Nk};
 
 unsafe fn KeyExpansion(key : &[u8]) -> Vec<u8> {
@@ -29,7 +32,7 @@ unsafe fn KeyExpansion(key : &[u8]) -> Vec<u8> {
         }
         
         // if we need to use the g function
-        if (i % Nk == 0) // at every Nk word ... every 4 words in 128 bit and 6 words in 192 bit and 8 words in 256 bit
+        if i % Nk == 0 // at every Nk word ... every 4 words in 128 bit and 6 words in 192 bit and 8 words in 256 bit
         {
             // rotate the 4 words
             let tobeRotated = temp[0];
@@ -146,27 +149,58 @@ unsafe fn unshiftRows(data: &mut [u8]) {
     }
 }
 
+unsafe fn mix(data: &mut [u8]) {
+    for word in 0..4 
+    {
+        let columnOfstate = data[word*4..word*4+4].to_vec().clone();
+        
+        data[word * 4 + 0] = g8add(&g8mult(&columnOfstate[0], &MixColumn[0][0]) , &g8add(&g8mult(&columnOfstate[1], &MixColumn[0][1]) 
+                           , &g8add(&g8mult(&columnOfstate[2], &MixColumn[0][2]) , &g8mult(&columnOfstate[3], &MixColumn[0][3]))));
+                             
+
+        data[word * 4 + 1] = g8add(&g8mult(&columnOfstate[0], &MixColumn[1][0]) , &g8add(&g8mult(&columnOfstate[1], &MixColumn[1][1]) 
+                           , &g8add(&g8mult(&columnOfstate[2], &MixColumn[1][2]) , &g8mult(&columnOfstate[3], &MixColumn[1][3]))));
+                             
+
+        data[word * 4 + 2] = g8add(&g8mult(&columnOfstate[0], &MixColumn[2][0]) , &g8add(&g8mult(&columnOfstate[1], &MixColumn[2][1]) 
+                           , &g8add(&g8mult(&columnOfstate[2], &MixColumn[2][2]) , &g8mult(&columnOfstate[3], &MixColumn[2][3]))));
+                             
+
+        data[word * 4 + 3] = g8add(&g8mult(&columnOfstate[0], &MixColumn[3][0]) , &g8add(&g8mult(&columnOfstate[1], &MixColumn[3][1]) 
+                           , &g8add(&g8mult(&columnOfstate[2], &MixColumn[3][2]) , &g8mult(&columnOfstate[3], &MixColumn[3][3]))));
+    }
+}
+
+
+unsafe fn invmix(data: &mut [u8]) {
+    for word in 0..4 
+    {
+        let columnOfstate = data[word*4..word*4+4].to_vec().clone();
+        
+        data[word * 4 + 0] = g8add(&g8mult(&columnOfstate[0], &invMixColumn[0][0]) , &g8add(&g8mult(&columnOfstate[1], &invMixColumn[0][1]) 
+                           , &g8add(&g8mult(&columnOfstate[2], &invMixColumn[0][2]) , &g8mult(&columnOfstate[3], &invMixColumn[0][3]))));
+                             
+    
+        data[word * 4 + 1] = g8add(&g8mult(&columnOfstate[0], &invMixColumn[1][0]) , &g8add(&g8mult(&columnOfstate[1], &invMixColumn[1][1]) 
+                           , &g8add(&g8mult(&columnOfstate[2], &invMixColumn[1][2]) , &g8mult(&columnOfstate[3], &invMixColumn[1][3]))));
+                             
+    
+        data[word * 4 + 2] = g8add(&g8mult(&columnOfstate[0], &invMixColumn[2][0]) , &g8add(&g8mult(&columnOfstate[1], &invMixColumn[2][1]) 
+                           , &g8add(&g8mult(&columnOfstate[2], &invMixColumn[2][2]) , &g8mult(&columnOfstate[3], &invMixColumn[2][3]))));
+                             
+    
+        data[word * 4 + 3] = g8add(&g8mult(&columnOfstate[0], &invMixColumn[3][0]) , &g8add(&g8mult(&columnOfstate[1], &invMixColumn[3][1]) 
+                           , &g8add(&g8mult(&columnOfstate[2], &invMixColumn[3][2]) , &g8mult(&columnOfstate[3], &invMixColumn[3][3]))));
+    }
+}
 
 fn main() {
     unsafe {
         let mut key : Vec<u8> = vec![52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60];
-        let mut data : Vec<u8> = vec![52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60,
-                                      52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60,
-                                      52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60,
-                                      52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60,
-                                      52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60,
-                                      52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60,
-                                      52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60,
-                                      52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60,
-                                      52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60];
+        mix(&mut key);
         println!("{:?}", key);
-        println!("---------------------------------------------");
-        shiftRows(&mut key);
+        invmix(&mut key);
         println!("{:?}", key);
-        println!("---------------------------------------------");
-        unshiftRows(&mut key);
-        println!("{:?}", key);
-        println!("---------------------------------------------");
 
     }
 }

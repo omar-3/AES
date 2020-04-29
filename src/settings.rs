@@ -8,3 +8,4 @@ pub static Nb : u8 = 4;
 
 pub static mut Nk: u8 = 4;      // number of 32 bit words in a key
 pub static mut Nr: u8 = 10;     // number of rounds in 128 bit key size
+
