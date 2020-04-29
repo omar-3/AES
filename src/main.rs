@@ -7,6 +7,7 @@ use AES::gf8_operations::{g8mult, g8add, g8sub};
 use AES::tables::{SBOX, INVSBOX, Rcon, MixColumn, invMixColumn};
 use AES::settings::{Nb, Nr, Nk};
 
+
 unsafe fn KeyExpansion(key : &[u8]) -> Vec<u8> {
 
     let mut RoundKey : Vec<u8> = vec![0; ((Nb * (Nr + 1)) * 4) as usize];
@@ -153,7 +154,7 @@ unsafe fn mix(data: &mut [u8]) {
     for word in 0..4 
     {
         let columnOfstate = data[word*4 .. word*4+4].to_vec().clone();
-        println!("{:?}", columnOfstate);
+
         data[word * 4 + 0] = g8add(&g8mult(&columnOfstate[0], &MixColumn[0][0]) , &g8add(&g8mult(&columnOfstate[1], &MixColumn[0][1]) 
                            , &g8add(&g8mult(&columnOfstate[2], &MixColumn[0][2]) , &g8mult(&columnOfstate[3], &MixColumn[0][3]))));
                              
@@ -196,12 +197,17 @@ unsafe fn invmix(data: &mut [u8]) {
 
 fn main() {
     unsafe {
-        let mut key : Vec<u8> = vec![52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60];
-        mix(&mut key);
+        let mut key : Vec<u8> = vec![52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60,12,123];
+        println!("{}", key.len());
+        let mut numOfElem = key.len() as u32;
+        let padded = (((numOfElem as f32)/(16.0)).ceil() as u32 ) * (16);
+        let numOfElemLeft = padded - numOfElem;
+        while padded - numOfElem > 0 {
+            key.push(numOfElemLeft as u8);
+            numOfElem = key.len() as u32;
+        }
         println!("{:?}", key);
-        invmix(&mut key);
-        println!("{:?}", key);
-
+        println!("{}", key.len());
     }
 }
 
