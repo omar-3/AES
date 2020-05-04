@@ -19,10 +19,10 @@ You will need to install ``Rust`` on your machine and set up ``cargo`` properly 
 </br>
 Luckily ``Rust`` has the easiest and most friendly installation in the world thanks to ``rustup``. You need to visit ``rustup`` official website from [here](https://rustup.rs/) and just copy one command in your terminal/cmd and follow the prompt</br>
 </br>
-You will find examples for testing aes internals in ```/tests/aes_internals.rs``` and for testing GF8 operations in ```/tests/gm8_operations.rs``` and you can run them with </br>
+You will find examples for testing aes internals in ```/tests/aes_internals.rs``` and for testing GF8 operations in ```/tests/gm8_operations.rs``` and you can run them with </br></br>
 ```cargo test```
 </br>
 and for runnable example you can check ```/src/main.rs``` which can be ran with 
-</br>
+</br></br>
 ```cargo run```
 </br>
