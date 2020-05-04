@@ -1,213 +1,78 @@
+
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
 #![allow(non_snake_case)]
 #![warn(unused_mut)]
 #![warn(unused_variables)]
+#[allow(dead_code)]
 
 
-use AES::gf8_operations::{g8mult, g8add, g8sub};
-use AES::tables::{SBOX, INVSBOX, Rcon, MixColumn, invMixColumn};
-use AES::settings::{Nb, Nr, Nk};
+use AES::settings::{Nr};
+use AES::aes_internals::{subSbox, invsubSbox, shiftRows, unshiftRows, mix, invmix, AddRoundKey, KeyExpansion};
 
+unsafe fn Encrypt(state : &mut [u8], RoundKey : &mut [u8]) {
+    let mut round = 0;
 
-unsafe fn KeyExpansion(key : &[u8]) -> Vec<u8> {
-
-    let mut RoundKey : Vec<u8> = vec![0; ((Nb * (Nr + 1)) * 4) as usize];
-    let mut temp : Vec<u8> = vec![0; 4];
-
-    for i in 0..Nk 
-    {
-        RoundKey[((i * 4) + 0) as usize] = key[((i * 4) + 0) as usize];
-        RoundKey[((i * 4) + 1) as usize] = key[((i * 4) + 1) as usize];
-        RoundKey[((i * 4) + 2) as usize] = key[((i * 4) + 2) as usize];
-        RoundKey[((i * 4) + 3) as usize] = key[((i * 4) + 3) as usize];
-    }
-
-    for i in Nk..(Nb * (Nr + 1)) 
-    {
-        // The keys of the last word
-        {
-            let k : u8 = (i - 1) * 4;
-            temp[0] = RoundKey[(k + 0) as usize];
-            temp[1] = RoundKey[(k + 1) as usize];
-            temp[2] = RoundKey[(k + 2) as usize];
-            temp[3] = RoundKey[(k + 3) as usize];
+    AddRoundKey(state , & RoundKey, & round);
+    loop {
+        round = round + 1;
+        subSbox(state);
+        shiftRows(state);
+        if round == Nr {
+            break;
         }
-        
-        // if we need to use the g function
-        if i % Nk == 0 // at every Nk word ... every 4 words in 128 bit and 6 words in 192 bit and 8 words in 256 bit
-        {
-            // rotate the 4 words
-            let tobeRotated = temp[0];
-            temp[0] = temp[1];
-            temp[1] = temp[2];
-            temp[2] = temp[3];
-            temp[3] = tobeRotated;
+        mix(state);
+        AddRoundKey(state, & RoundKey, & round);
+    }
 
-            // sbox substitution
-            temp[0] = SBOX[temp[0] as usize];
-            temp[1] = SBOX[temp[1] as usize];
-            temp[2] = SBOX[temp[2] as usize];
-            temp[3] = SBOX[temp[3] as usize];
+    AddRoundKey(state, & RoundKey, & round);
+}
 
-            // add Rcon component 
-            temp[0] = temp[0] ^ Rcon[((i/Nk) - 1) as usize];
+unsafe fn Decrypt(state: &mut [u8], RoundKey : &mut [u8]) {
+    let mut round = Nr;
+
+    AddRoundKey(state , & RoundKey, & round);
+    loop {
+        round = round - 1;
+        unshiftRows(state);
+        invsubSbox(state);
+        AddRoundKey(state , & RoundKey, & round);
+        if round == 0 {
+            break;
         }
-
-        // the word above it
-        let k = (i - Nk) * 4;
-
-        RoundKey[((i * 4) + 0) as usize] = RoundKey[(k + 0) as usize] ^ temp[0];
-        RoundKey[((i * 4) + 1) as usize] = RoundKey[(k + 1) as usize] ^ temp[1];
-        RoundKey[((i * 4) + 2) as usize] = RoundKey[(k + 2) as usize] ^ temp[2];
-        RoundKey[((i * 4) + 3) as usize] = RoundKey[(k + 3) as usize] ^ temp[3];
-    }
-
-    RoundKey
-}
-
-unsafe fn AddRoundKey(data : &mut [u8], RoundKey : & [u8], round : u8) {
-    for i in 0..4*Nb {
-        data[i as usize] = data[i as usize] ^ RoundKey[((round * Nb * 4) + i ) as usize];
+        invmix(state);
     }
 }
 
-unsafe fn subSbox(data: &mut [u8]) {
-    for byte in data.iter_mut() {
-        *byte = SBOX[*byte as usize];
-    }
-}
-
-unsafe fn invsubSbox(data: &mut [u8]) {
-    for byte in data.iter_mut() {
-        *byte = INVSBOX[*byte as usize];
-    }
-}
-
-unsafe fn shiftRows(data: &mut [u8]) {
-
-    // second row --> 1 shift to left
-    // second row indices is 1-5-9-12
-    {
-        let temp = data[1];
-        data[1]  = data[5];
-        data[5]  = data[9];
-        data[9]  = data[13];
-        data[13] = temp;
-    }
-
-    // third row --> 2 shifts to left
-    // third row indices is 2-6-10-14
-    {
-        let temp1 = data[2];
-        let temp2 = data[6];
-        data[2] = data[10];
-        data[6] = data[14];
-
-        data[10] = temp1;
-        data[14] = temp2;
-    }
-
-    // fourth row --> 3 shifts to left
-    // fourth row indices is 3-7-11-15
-    {
-        let temp = data[15];
-        data[15] = data[11];
-        data[11] = data[7];
-        data[7]  = data[3];
-        data[3]  = temp;
-    }
-}
-
-
-unsafe fn unshiftRows(data: &mut [u8]) {
-
-    // second row --> 1 shifts to right
-    {
-        let temp = data[13];
-        data[13] = data[9];
-        data[9] = data[5];
-        data[5] = data[1];
-        data[1] = temp;
-    }
-
-    // third row --> 2 shifts to right
-    {
-        let temp1 = data[14];
-        let temp2 = data[10];
-        data[14] = data[6];
-        data[10] = data[2];
-
-        data[6] = temp1;
-        data[2] = temp2;
-    }
-
-    // fourth row --> 3 shits to right
-    {
-        let temp = data[3];
-        data[3] = data[7];
-        data[7] = data[11];
-        data[11] = data[15];
-        data[15] = temp;
-    }
-}
-
-unsafe fn mix(data: &mut [u8]) {
-    for word in 0..4 
-    {
-        let columnOfstate = data[word*4 .. word*4+4].to_vec().clone();
-
-        data[word * 4 + 0] = g8add(&g8mult(&columnOfstate[0], &MixColumn[0][0]) , &g8add(&g8mult(&columnOfstate[1], &MixColumn[0][1]) 
-                           , &g8add(&g8mult(&columnOfstate[2], &MixColumn[0][2]) , &g8mult(&columnOfstate[3], &MixColumn[0][3]))));
-                             
-
-        data[word * 4 + 1] = g8add(&g8mult(&columnOfstate[0], &MixColumn[1][0]) , &g8add(&g8mult(&columnOfstate[1], &MixColumn[1][1]) 
-                           , &g8add(&g8mult(&columnOfstate[2], &MixColumn[1][2]) , &g8mult(&columnOfstate[3], &MixColumn[1][3]))));
-                             
-
-        data[word * 4 + 2] = g8add(&g8mult(&columnOfstate[0], &MixColumn[2][0]) , &g8add(&g8mult(&columnOfstate[1], &MixColumn[2][1]) 
-                           , &g8add(&g8mult(&columnOfstate[2], &MixColumn[2][2]) , &g8mult(&columnOfstate[3], &MixColumn[2][3]))));
-                             
-
-        data[word * 4 + 3] = g8add(&g8mult(&columnOfstate[0], &MixColumn[3][0]) , &g8add(&g8mult(&columnOfstate[1], &MixColumn[3][1]) 
-                           , &g8add(&g8mult(&columnOfstate[2], &MixColumn[3][2]) , &g8mult(&columnOfstate[3], &MixColumn[3][3]))));
-    }
-}
-
-
-unsafe fn invmix(data: &mut [u8]) {
-    for word in 0..4 
-    {
-        let columnOfstate = data[word*4 .. word*4+4].to_vec().clone();
-        
-        data[word * 4 + 0] = g8add(&g8mult(&columnOfstate[0], &invMixColumn[0][0]) , &g8add(&g8mult(&columnOfstate[1], &invMixColumn[0][1]) 
-                           , &g8add(&g8mult(&columnOfstate[2], &invMixColumn[0][2]) , &g8mult(&columnOfstate[3], &invMixColumn[0][3]))));
-                             
-    
-        data[word * 4 + 1] = g8add(&g8mult(&columnOfstate[0], &invMixColumn[1][0]) , &g8add(&g8mult(&columnOfstate[1], &invMixColumn[1][1]) 
-                           , &g8add(&g8mult(&columnOfstate[2], &invMixColumn[1][2]) , &g8mult(&columnOfstate[3], &invMixColumn[1][3]))));
-                             
-    
-        data[word * 4 + 2] = g8add(&g8mult(&columnOfstate[0], &invMixColumn[2][0]) , &g8add(&g8mult(&columnOfstate[1], &invMixColumn[2][1]) 
-                           , &g8add(&g8mult(&columnOfstate[2], &invMixColumn[2][2]) , &g8mult(&columnOfstate[3], &invMixColumn[2][3]))));
-                             
-    
-        data[word * 4 + 3] = g8add(&g8mult(&columnOfstate[0], &invMixColumn[3][0]) , &g8add(&g8mult(&columnOfstate[1], &invMixColumn[3][1]) 
-                           , &g8add(&g8mult(&columnOfstate[2], &invMixColumn[3][2]) , &g8mult(&columnOfstate[3], &invMixColumn[3][3]))));
-    }
-}
 
 fn main() {
     unsafe {
-        let mut key : Vec<u8> = vec![52,16,25,36,54,62,51,65,53,26,54,62,54,76,95,60,12,123];
-        println!("{}", key.len());
-        let mut numOfElem = key.len() as u32;
-        let padded = (((numOfElem as f32)/(16.0)).ceil() as u32 ) * (16);
-        let numOfElemLeft = padded - numOfElem;
-        while padded - numOfElem > 0 {
-            key.push(numOfElemLeft as u8);
-            numOfElem = key.len() as u32;
-        }
-        println!("{:?}", key);
-        println!("{}", key.len());
+
+        // let mut key : Vec<u8> = vec![0x02, 0x5f, 0x44, 0x10, 0x0e, 0xf3, 0xc9, 0x95, 0xc5, 0x87, 0xaf, 0x9b, 0x2a, 0xa6, 0x75, 0x0a];
+        // println!("{:02x?}", key);
+        // shiftRows(&mut key);
+        // println!("{:02x?}", key);
+        // unshiftRows(&mut key);
+        // println!("{:02x?}", key);
+
+        // let mut inputMixCol : Vec<u8> = vec![0x02, 0xf3, 0xaf, 0x0a, 0x0e, 0x87, 0x75, 0x10, 0xc5, 0xa6, 0x44, 0x95, 0x2a, 0x5f, 0xc9, 0x9b];
+        // mix(&mut inputMixCol);
+        // println!("{:02x?}", inputMixCol);
+        // invmix(&mut inputMixCol);
+        // println!("{:02x?}", inputMixCol);
+
+        // let mut data : Vec<u8> = vec![0xaf, 0x1f, 0xaa, 0x4e, 0xeb, 0x94, 0x53, 0xc0, 0xb1, 0xcb, 0x4f, 0x87, 0xe7, 0x4f, 0x4a, 0xc5];
+        // let mut key  : Vec<u8> = vec![0x62, 0x63, 0x63, 0x63, 0x62, 0x63, 0x63, 0x63, 0x62, 0x63, 0x63, 0x63, 0x62, 0x63, 0x63, 0x63];
+        // AddRoundKey(&mut data, &mut key, 0);
+        // println!("{:02x?}", data);
+
+        let mut data : Vec<u8> = vec![0x58, 0xc8, 0xe0, 0x0b, 0x26, 0x31, 0x68, 0x6d, 0x54, 0xea, 0xb8, 0x4b, 0x91, 0xf0, 0xac, 0xa1];
+        let mut key  : Vec<u8> = vec![0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+        let mut RoundKey : Vec<u8> = KeyExpansion(&mut key);
+        Encrypt(&mut data, &mut RoundKey);
+        println!("{:02x?}", data);                          // data array has been mutated and encrypted
+        Decrypt(&mut data, &mut RoundKey);
+        println!("{:02x?}", data);                          // data array should be as we have entered
     }
 }
 

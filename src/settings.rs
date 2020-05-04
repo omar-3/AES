@@ -1,3 +1,10 @@
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(non_snake_case)]
+#![warn(unused_mut)]
+#![warn(unused_variables)]
+#[allow(dead_code)]
+
 // Number of 32-bit words in each state. This is constant in AES.
 
 pub static Nb : u8 = 4;

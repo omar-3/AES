@@ -1,8 +1,14 @@
+#![allow(non_snake_case)]
+#![warn(non_upper_case_globals)]
+#![allow(non_snake_case)]
+#![warn(unused_mut)]
+#![warn(unused_variables)]
+#![warn(dead_code)]
+
 use AES::gf8_operations::{g8mult, g8add, g8sub};
 
 
 #[test]
-
 fn gf8multiplication() {
     
     // still in GF8 bounds, so this is just a simple multiplication
@@ -45,7 +51,7 @@ fn gf8multiplication() {
 /*
  * addition and subtraction in GF8 is just bit-wise XOR-ing for the two numbers
  */
-
+#[test]
 fn gf8add_sub() {
 
     /*

@@ -1,3 +1,10 @@
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(non_snake_case)]
+#![warn(unused_mut)]
+#![warn(unused_variables)]
+#[allow(dead_code)]
+
 /*
  * Multiplication in GF(2^8)
  * http://en.wikipedia.org/wiki/Finite_field_arithmetic
