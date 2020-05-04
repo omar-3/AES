@@ -12,3 +12,17 @@ This ~~is~~ <b>would be</b> ``Rust`` implementation for ```AES``` based on [FIBS
 
 </br></br>Many of these modes are obsolete but I ~~am~~ <b>would be</b> including them for the sake of completeness. This is not a table-based implementation like what you could find at OpenSSL from [here](https://github.com/openssl/openssl/blob/master/crypto/aes/aes_core.c), so this can't be used in a **very** serious application.
 
+
+## How to run
+
+You will need to install ``Rust`` on your machine and set up ``cargo`` properly in your machine.</br>
+</br>
+Luckily ``Rust`` has the easiest and most friendly installation in the world thanks to ``rustup``. You need to visit ``rustup`` official website from [here](https://rustup.rs/) and just copy one command in your terminal/cmd and follow the prompt</br>
+</br>
+You will find examples for testing aes internals in ```/tests/aes_internals.rs``` and for testing GF8 operations in ```/tests/gm8_operations.rs``` and you can run them with </br>
+```cargo test```
+</br>
+and for runnable example you can check ```/src/main.rs``` which can be ran with 
+</br>
+```cargo run```
+</br>
