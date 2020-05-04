@@ -21,7 +21,7 @@ Luckily ``Rust`` has the easiest and most friendly installation in the world tha
 </br>
 You will find examples for testing aes internals in ```/tests/aes_internals.rs``` and for testing GF8 operations in ```/tests/gm8_operations.rs``` and you can run them with </br></br>
 ```cargo test```
-</br>
+</br></br>
 and for runnable example you can check ```/src/main.rs``` which can be ran with 
 </br></br>
 ```cargo run```
