@@ -59,7 +59,6 @@ pub static MixColumn : [[u8; 4]; 4] =
     [0x03, 0x01, 0x01, 0x02]
 ];
 
-
 pub static invMixColumn : [[u8; 4]; 4] = 
 [
     [0x0e, 0x0b, 0x0d, 0x09],

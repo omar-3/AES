@@ -8,7 +8,7 @@
 
 use crate::gf8_operations::{g8mult, g8add};
 use crate::tables::{SBOX, INVSBOX, Rcon, MixColumn, invMixColumn};
-use crate::settings::{Nb, Nr, Nk};
+use crate::settings::{Nb, Nr, Nk, CBC, ECB};
 
 
 // unsafe keyword because we are using Nr, Nb, Nk as global functions
@@ -96,8 +96,6 @@ pub unsafe fn unshiftRows(data: &mut [u8]) {
     }
 }
 
-
-
 pub unsafe fn mix(data: &mut [u8]) {
     for word in 0..4 
     {
@@ -119,7 +117,6 @@ pub unsafe fn mix(data: &mut [u8]) {
                            , &g8add(&g8mult(&columnOfstate[2], &MixColumn[3][2]) , &g8mult(&columnOfstate[3], &MixColumn[3][3]))));
     }
 }
-
 
 pub unsafe fn invmix(data: &mut [u8]) {
     for word in 0..4 
@@ -143,14 +140,13 @@ pub unsafe fn invmix(data: &mut [u8]) {
     }
 }
 
-
 pub unsafe fn AddRoundKey(data : &mut [u8], RoundKey : & [u8], round : & u8) {
     for i in 0..4*Nb {
         data[i as usize] = data[i as usize] ^ RoundKey[((round * Nb * 4) + i ) as usize];
     }
 }
 
-pub unsafe fn KeyExpansion(key : &[u8]) -> Vec<u8> {
+pub unsafe fn KeyExpansion(key : &[u8], KEY : &u32) -> Vec<u8> {
 
     let mut RoundKey : Vec<u8> = vec![0; ((Nb * (Nr + 1)) * 4) as usize];
     let mut temp : Vec<u8> = vec![0; 4];
@@ -194,6 +190,17 @@ pub unsafe fn KeyExpansion(key : &[u8]) -> Vec<u8> {
             temp[0] = temp[0] ^ Rcon[((i/Nk) - 1) as usize];
         }
 
+        if *KEY == 256 
+        {
+            if i % Nk == 4 
+            {
+                temp[0] = SBOX[temp[0] as usize];
+                temp[1] = SBOX[temp[1] as usize];
+                temp[2] = SBOX[temp[2] as usize];
+                temp[3] = SBOX[temp[3] as usize];
+            }
+        }
+
         // the word above it
         let k = (i - Nk) * 4;
 
@@ -207,11 +214,3 @@ pub unsafe fn KeyExpansion(key : &[u8]) -> Vec<u8> {
 }
 
 
-// this is PCK55 padding
-// let mut numOfElem = key.len() as u32;
-// let padded = (((numOfElem as f32)/(16.0)).ceil() as u32 ) * (16);
-// let numOfElemLeft = padded - numOfElem;
-// while padded - numOfElem > 0 {
-//     key.push(numOfElemLeft as u8);
-//     numOfElem = key.len() as u32;
-// }
